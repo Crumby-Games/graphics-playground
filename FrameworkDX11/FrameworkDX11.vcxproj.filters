@@ -1,0 +1,200 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="imgui\imgui_impl_win32.cpp">
+      <Filter>Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui.cpp">
+      <Filter>Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_demo.cpp">
+      <Filter>Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_draw.cpp">
+      <Filter>Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_impl_dx11.cpp">
+      <Filter>Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_tables.cpp">
+      <Filter>Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_widgets.cpp">
+      <Filter>Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="DDSTextureLoader.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="DX11App.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="DX11Renderer.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="gltf_utils.cpp">
+      <Filter>App\gltf</Filter>
+    </ClCompile>
+    <ClCompile Include="log.cpp">
+      <Filter>App\gltf</Filter>
+    </ClCompile>
+    <ClCompile Include="mikktspace.cpp">
+      <Filter>App\gltf</Filter>
+    </ClCompile>
+    <ClCompile Include="scene_load.cpp">
+      <Filter>App\gltf</Filter>
+    </ClCompile>
+    <ClCompile Include="scene_utils.cpp">
+      <Filter>App\gltf</Filter>
+    </ClCompile>
+    <ClCompile Include="scenegraph.cpp">
+      <Filter>App\gltf</Filter>
+    </ClCompile>
+    <ClCompile Include="tangent_calculator.cpp">
+      <Filter>App\gltf</Filter>
+    </ClCompile>
+    <ClCompile Include="utils.cpp">
+      <Filter>App\gltf</Filter>
+    </ClCompile>
+    <ClCompile Include="Animation.cpp">
+      <Filter>Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Skeleton.cpp">
+      <Filter>Animation</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="imgui\imgui_impl_win32.h">
+      <Filter>Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imconfig.h">
+      <Filter>Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui.h">
+      <Filter>Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_impl_dx11.h">
+      <Filter>Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_internal.h">
+      <Filter>Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imstb_rectpack.h">
+      <Filter>Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imstb_textedit.h">
+      <Filter>Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imstb_truetype.h">
+      <Filter>Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="DDSTextureLoader.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="DX11App.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="main.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="structures.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <CLInclude Include="resource.h">
+      <Filter>App</Filter>
+    </CLInclude>
+    <ClInclude Include="constants.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="DX11Renderer.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="gltf_utils.hpp">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="irenderingcontext.hpp">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="iscene.hpp">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="json.hpp">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="log.hpp">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="mikktspace.hpp">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="scene_utils.hpp">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="scenegraph.h">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_image_write.h">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="tangent_calculator.hpp">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="tiny_gltf.h">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.hpp">
+      <Filter>App\gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Skeleton.h">
+      <Filter>Animation</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="App">
+      <UniqueIdentifier>{588450c5-6836-4154-b32f-07ac5639f2c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{e86515e1-452b-47cc-9a12-406b975f30f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Imgui">
+      <UniqueIdentifier>{50d7b8ea-b982-4d22-b159-764a7f9e5bc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation">
+      <UniqueIdentifier>{0e285f36-e5dd-4044-8c34-d9682b34d2d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PBR">
+      <UniqueIdentifier>{32b1b5ae-03aa-4e8a-9742-e2a9047cfb7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\gltf">
+      <UniqueIdentifier>{ad6ae4d6-9aff-4e26-a3ac-afef22999c07}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="skinned_shader.hlsl">
+      <Filter>Animation</Filter>
+    </FxCompile>
+    <FxCompile Include="pbr_shader.hlsl">
+      <Filter>PBR</Filter>
+    </FxCompile>
+  </ItemGroup>
+</Project>

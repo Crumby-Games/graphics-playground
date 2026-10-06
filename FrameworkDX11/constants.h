@@ -1,0 +1,6 @@
+#pragma once
+
+
+#define SCREEN_WIDTH 1920
+#define SCREEN_HEIGHT 1080
+constexpr unsigned int max_bones = 100;
