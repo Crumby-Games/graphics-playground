@@ -28,7 +28,6 @@ class DX11Renderer;
 class Scene
 {
 public:
-
 	Scene() {}
 
 	~Scene() {}
@@ -43,6 +42,11 @@ public:
 
 private:
 	void setupLightProperties();
+	struct CustomConstantBuffer {
+		float gTime;
+		float padding[3];
+	};
+	float m_timeElapsed = 0.0;
 
 public:
 	Camera* m_pCamera;
@@ -56,11 +60,13 @@ public:
 
 	LightPropertiesConstantBuffer m_lightProperties;
 	IRenderingContext m_ctx;
-	SceneGraph m_sceneobject;
+	std::vector<SceneGraph> m_sceneobjects;
 
 
 private:
+
 	ID3D11ShaderResourceView* m_pTextureDiffuse;
+	ID3D11ShaderResourceView* m_pTextureDiffuseSecondary;
 	ID3D11ShaderResourceView* m_pTextureNormal;
 	ID3D11ShaderResourceView* m_pTextureMetallic;
 	ID3D11ShaderResourceView* m_pTextureRoughness;

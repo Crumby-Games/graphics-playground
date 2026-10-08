@@ -4,6 +4,7 @@
 
 HRESULT Scene::init(HWND hwnd, const Microsoft::WRL::ComPtr<ID3D11Device>& device, const Microsoft::WRL::ComPtr<ID3D11DeviceContext>& context, DX11Renderer* renderer)
 {
+
 	m_pd3dDevice = device;
 	m_pImmediateContext = context;
 
@@ -15,7 +16,13 @@ HRESULT Scene::init(HWND hwnd, const Microsoft::WRL::ComPtr<ID3D11Device>& devic
 
     m_ctx.Init(device.Get(), context.Get(), renderer);
     //bool ok = m_sceneobject.LoadSphere(m_ctx);
-    bool ok = m_sceneobject.LoadGLTF(m_ctx, L"Resources\\sphere.gltf");
+    for (int i = 0; i<2; i++) m_sceneobjects.push_back(SceneGraph());
+
+    bool ok = m_sceneobjects[0].LoadGLTF(m_ctx, L"Resources\\sphere.gltf");
+    ok = m_sceneobjects[1].LoadGLTF(m_ctx, L"Resources\\Fox.gltf");
+    m_sceneobjects[1].AddMatrixToRoots(XMMatrixRotationZ(45));
+    m_sceneobjects[1].AddTranslationToRoots({ 2,0,0 });
+    
     //bool ok = m_sceneobject.LoadGLTF(m_ctx, L"Resources\\FlightHelmet.gltf");
     //bool ok = m_sceneobject.LoadGLTFWithSkeleton(m_ctx, L"Resources\\Fox.gltf");
 
@@ -32,6 +39,14 @@ HRESULT Scene::init(HWND hwnd, const Microsoft::WRL::ComPtr<ID3D11Device>& devic
     if (FAILED(hr))
         return hr;
 
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(CustomConstantBuffer);
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bd.CPUAccessFlags = 0;
+    hr = m_pd3dDevice->CreateBuffer(&bd, nullptr, &m_pCustomConstantBuffer);
+    if (FAILED(hr))
+        return hr;
+
     setupLightProperties();
 
     // Create the light constant buffer
@@ -43,8 +58,14 @@ HRESULT Scene::init(HWND hwnd, const Microsoft::WRL::ComPtr<ID3D11Device>& devic
     if (FAILED(hr))
         return hr;
 
+
+
     // load and setup textures
     hr = CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Resources\\rusty_metal_04_diff.dds", nullptr, &m_pTextureDiffuse);
+    if (FAILED(hr))
+        return hr;
+
+    hr = CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Resources\\ice.dds", nullptr, &m_pTextureDiffuseSecondary);
     if (FAILED(hr))
         return hr;
 
@@ -90,26 +111,41 @@ void Scene::setupLightProperties()
 
 void Scene::update(const float deltaTime)
 {
+    m_timeElapsed += deltaTime;
+    ID3D11ShaderResourceView* textures[] = { m_pTextureDiffuse, m_pTextureDiffuseSecondary };
     // note the pixel shader and the vertex shader have been set by the renderer class calling this method
-    m_pImmediateContext->PSSetShaderResources(0, 1, &m_pTextureDiffuse);
+    m_pImmediateContext->PSSetShaderResources(0, 2, textures);
     m_pImmediateContext->PSSetSamplers(0, 1, &m_pSamplerLinear);
+  
 
 
-    ConstantBuffer cb1;
-    cb1.mView = XMMatrixTranspose(getCamera()->getViewMatrix());
-    cb1.mProjection = XMMatrixTranspose(getCamera()->getProjectionMatrix());
-    cb1.vOutputColor = XMFLOAT4(0, 0, 0, 0);
+    ConstantBuffer cb;
+    cb.mView = XMMatrixTranspose(getCamera()->getViewMatrix());
+    cb.mProjection = XMMatrixTranspose(getCamera()->getProjectionMatrix());
+    cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
+
+    CustomConstantBuffer ccb;
+    ccb.gTime = m_timeElapsed;
+
+    m_pImmediateContext->UpdateSubresource(
+        m_pCustomConstantBuffer.Get(),
+        0,
+        nullptr,
+        &ccb,
+        0,
+        0);
+
 
 
     m_lightProperties.EyePosition = XMFLOAT4(m_pCamera->getPosition().x, m_pCamera->getPosition().y, m_pCamera->getPosition().z, 1);
 
     m_pImmediateContext->UpdateSubresource(m_pLightConstantBuffer.Get(), 0, nullptr, &m_lightProperties, 0, 0);
-    ID3D11Buffer* buf = m_pLightConstantBuffer.Get();
-    m_pImmediateContext->PSSetConstantBuffers(1, 1, &buf);
+    ID3D11Buffer* bufs[] = { m_pLightConstantBuffer.Get(), m_pCustomConstantBuffer.Get() };
+    m_pImmediateContext->PSSetConstantBuffers(1, 2, bufs);
 
     // scene object 1 
-    m_sceneobject.AnimateFrame(m_ctx); // this updates the transform matrix for the object - this should be called after all transforms have been made
-    
-    m_sceneobject.RenderFrame(m_ctx, deltaTime); // renders the object
-
+    for (SceneGraph scene_obj : m_sceneobjects) {
+        scene_obj.AnimateFrame(m_ctx);
+        scene_obj.RenderFrame(m_ctx, deltaTime);
+    }
 }

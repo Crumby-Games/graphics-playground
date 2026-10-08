@@ -9,7 +9,14 @@ cbuffer ConstantBuffer : register( b0 )
 	float4 vOutputColor;
 }
 
+cbuffer CustomConstantBuffer : register(b2)
+{
+    float gTime;
+	
+}
+
 Texture2D albedoMap : register(t0);
+Texture2D albedoMapSecondary : register(t1);
 SamplerState samLinear : register(s0);
 
 static const float PI = 3.14159265f;
@@ -83,7 +90,7 @@ float4 DoSpecular(Light lightObject, float3 pixelToEyeVectorNormalised, float3 p
 	{
 		// note the reflection equation requires the *light to pixel* vector - hence we reverse it
         float3 reflection = reflect(-pixelToLightVectorNormalised, Normal);
-        specular = pow(saturate(dot(reflection, pixelToEyeVectorNormalised)), 4); // 32 = specular power Material.SpecularPower
+        specular = pow(saturate(dot(reflection, pixelToEyeVectorNormalised)), 32); // 32 = specular power Material.SpecularPower
     }
 
 	return specular;
@@ -180,16 +187,24 @@ float4 PS_Normal(PS_INPUT IN) : SV_TARGET
     LightingResult lit = ComputeLighting(pixelToLightVectorNormalised, pixelToEyeVectorNormalised, distanceFromPixelToLight, normalize(IN.Norm));
 
 	// NOTE we aren't using any material properties just yet. 
-    float4 ambient = GlobalAmbient;  
+    float4 ambient = GlobalAmbient;
 	float4 diffuse = lit.Diffuse;
 	float4 specular = lit.Specular;
 
-    float4 texColor;
-	texColor = albedoMap.Sample(samLinear, IN.Tex);
+    float4 texColorPrimary = albedoMap.Sample(samLinear, float2(1.0 - (IN.Tex.x + gTime * 0.1), IN.Tex.y));
+    float4 texColorSecondary = albedoMapSecondary.Sample(samLinear, IN.Tex + gTime * float2(0.2, 0.0));
+    float4 texColor = lerp(texColorSecondary, texColorPrimary, IN.Tex.y);
 	
-    float4 diffuseColor = (ambient + diffuse + specular) * texColor;
-	
-	return diffuseColor;
+    float diffuseIntensity = saturate(dot(normalize(IN.Norm), pixelToLightVectorNormalised.xyz));
+    if (diffuseIntensity > 0.8)
+        diffuseIntensity = 1.0;
+    else if (diffuseIntensity > 0.4)
+        diffuseIntensity = 0.6;
+    else
+        diffuseIntensity = 0.2;
+    //float4 texColor = texColorPrimary;
+    float4 diffuseColor = (ambient + (diffuse + specular) * diffuseIntensity) * texColor;
+    return float4(diffuseColor.rgb, 1.0);
 }
 
 //--------------------------------------------------------------------------------------
