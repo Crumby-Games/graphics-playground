@@ -16,10 +16,14 @@ cbuffer CustomConstantBuffer : register(b2)
 }
 
 Texture2D albedoMap : register(t0);
-Texture2D albedoMapSecondary : register(t1);
+Texture2D metallicMap : register(t1);
+Texture2D roughnessMap : register(t2);
+TextureCube iblDiffuseMap : register(t3);
+TextureCube iblSpecularMap : register(t4);
 SamplerState samLinear : register(s0);
 
 static const float PI = 3.14159265f;
+static const float maxReflectionLod = 10;
 
 #define MAX_LIGHTS 1
 // Light types.
@@ -144,6 +148,22 @@ LightingResult ComputeLighting(float4 pixelToLightVectorNormalised, float4 pixel
 	return totalResult;
 }
 
+float G_sub(float3 N, float3 V, float k)
+{
+    float3 NdotV = dot(N, V);
+    return NdotV / (NdotV * (1 - k) + k);
+}
+
+float2 IntegrateBRDF(float NdotV, float roughness)
+{
+    const float4 c0 = float4(-1, -0.0275, -0.572, 0.022);
+    const float4 c1 = float4(1, 0.0425, 1.04, -0.04);
+    
+    float4 r = roughness * c0 * c1;
+    float a004 = min(r.x * r.x, exp2(-9.28 * NdotV)) * r.x + r.y;
+    return float2(-1.04, 1.04) * a004 * r.zw;
+}
+
 //--------------------------------------------------------------------------------------
 // Vertex Shader
 //--------------------------------------------------------------------------------------
@@ -169,10 +189,103 @@ PS_INPUT VS( VS_INPUT input )
 
 float4 PS_PBR(PS_INPUT IN) : SV_TARGET
 {
-    float3 finalColour = float4(1, 0, 0, 0);
+    //float3 albedo = float3(0.3, 0.3, 0.3);
+    //float metallic = 0.2;
+    //float roughness = 1.0;
+    float3 albedo = albedoMap.Sample(samLinear, IN.Tex);
+    float metallic = metallicMap.Sample(samLinear, IN.Tex).r;
+    float roughness = roughnessMap.Sample(samLinear, IN.Tex).r;
+ 
+// 2. Get the normal from the normal map 
+
+    float3 N = IN.Norm;
+ 
+// 3. Calculate vectors 
+    float3 V = normalize(EyePosition - IN.worldPos); // View vector 
+    float3 L = normalize(Lights[0].Position - IN.worldPos); // Light vector 
+    float3 H = normalize(V + L); // Halfway vector 
+    float3 R = reflect(-V, N);
+    float cosTheta = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+ 
+ 
+// 4. Calculate Fresnel F0 
+// For dielectrics, F0 is constant. For metals, it's the albedo. 
+    float3 F0 = float3(0.04, 0.04, 0.04);
+    F0 = lerp(F0, albedo, metallic);
+	
+    float3 F = F0 + (1 - F0) * pow(1 - cosTheta, 5);
+	
+// 5. Specular Component
+// 5.1 NDF
+    float rSq = roughness * roughness;
+    float NdotH = dot(N, H);
+    float D = rSq / (PI * pow(pow(NdotH, 2) * (rSq - 1) + 1, 2));
+
+//// 5.2 GGX
+    float k = pow(roughness + 1, 2) / 8;
+    float G = G_sub(L, N, k) * G_sub(V, N, k);
+	
+//// 5.3 Specular BRDF
+    float3 specular = (D * G * F) / (4 * dot(N, L) * dot(N, V));
+
+//// 6. Diffuse Component
+    float3 dColor = (1 - F) * (1 - metallic);
+    float3 diffuse = dColor * albedo / PI;
+
+//// 7. Result
+    float3 finalPoint = (diffuse + specular) * NdotL;
     
-    return float4(finalColour, 1.0);
+	
+
+// Part B
+
+    
+    // Part B: Environment
+    float3 finalIBL = float3(0, 0, 0);
+    const int typeIBL = 2;
+    switch (typeIBL)
+    {
+        case 0:
+            const float3 ambientColor = float3(0.1, 0.1, 0.1);
+            finalIBL = ambientColor * dColor * albedo;
+            break;
+        case 1:
+            const float3 skyCol = float3(0.11, 0.11, 0.94);
+            const float3 groundCol = float3(0.0, 0.33, 0.0);
+            const float3 up = float3(0, 1, 0);
+            
+            float weightN = dot(N, up) * 0.5 + 0.5;
+            float weightR = dot(R, up) * 0.5 + 0.5;
+            float3 diffuseLightHem = lerp(groundCol, skyCol, weightN);
+            float3 specularLightHem = lerp(groundCol, skyCol, weightR);
+            float3 diffuseHem = dColor * albedo * diffuseLightHem;
+            float3 specularHem = F * specularLightHem;
+            finalIBL = diffuseHem + specularHem;
+            
+            break;
+    
+        case 2:
+
+            float3 irradiance = iblDiffuseMap.Sample(samLinear, N);
+            float3 diffuseIBL = dColor * albedo * irradiance;
+            
+            float prefilteredLod = roughness * maxReflectionLod;
+            float3 prefilteredColour = iblSpecularMap.SampleLevel(samLinear, R, prefilteredLod).rgb;
+        
+            float2 brdf = IntegrateBRDF(dot(N, V), roughness);
+            float3 specularIBL = prefilteredColour * (F * brdf.x + brdf.y);
+            finalIBL = diffuseIBL + specularIBL;
+        
+            
+            break;
+    }
+
+
+    float3 ambient = 0.01 * albedo;
+    return float4(finalPoint + finalIBL + ambient, 1.0);
 }
+
 
 //--------------------------------------------------------------------------------------
 // Pixel Shader
@@ -191,9 +304,7 @@ float4 PS_Normal(PS_INPUT IN) : SV_TARGET
 	float4 diffuse = lit.Diffuse;
 	float4 specular = lit.Specular;
 
-    float4 texColorPrimary = albedoMap.Sample(samLinear, float2(1.0 - (IN.Tex.x + gTime * 0.1), IN.Tex.y));
-    float4 texColorSecondary = albedoMapSecondary.Sample(samLinear, IN.Tex + gTime * float2(0.2, 0.0));
-    float4 texColor = lerp(texColorSecondary, texColorPrimary, IN.Tex.y);
+    float4 texColor = albedoMap.Sample(samLinear, float2(1.0 - (IN.Tex.x + gTime * 0.1), IN.Tex.y));
 	
     float diffuseIntensity = saturate(dot(normalize(IN.Norm), pixelToLightVectorNormalised.xyz));
     if (diffuseIntensity > 0.8)

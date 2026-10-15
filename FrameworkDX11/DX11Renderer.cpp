@@ -77,7 +77,7 @@ HRESULT DX11Renderer::init(HWND hwnd)
     ID3DBlob* pPSBlob = nullptr;
 
     if constexpr (PBR_MODE)
-        hr = DX11Renderer::compileShaderFromFile(L"pbr_shader.hlsl", "PS_Normal", "ps_4_0", &pPSBlob);
+        hr = DX11Renderer::compileShaderFromFile(L"pbr_shader.hlsl", "PS_PBR", "ps_4_0", &pPSBlob);
     else
         hr = DX11Renderer::compileShaderFromFile(L"skinned_shader.hlsl", "PS", "ps_4_0", &pPSBlob);
 
