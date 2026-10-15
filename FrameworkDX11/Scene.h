@@ -66,7 +66,6 @@ public:
 private:
 
 	ID3D11ShaderResourceView* m_pTextureDiffuse;
-	ID3D11ShaderResourceView* m_pTextureDiffuseSecondary;
 	ID3D11ShaderResourceView* m_pTextureNormal;
 	ID3D11ShaderResourceView* m_pTextureMetallic;
 	ID3D11ShaderResourceView* m_pTextureRoughness;

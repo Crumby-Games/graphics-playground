@@ -65,7 +65,20 @@ HRESULT Scene::init(HWND hwnd, const Microsoft::WRL::ComPtr<ID3D11Device>& devic
     if (FAILED(hr))
         return hr;
 
-    hr = CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Resources\\ice.dds", nullptr, &m_pTextureDiffuseSecondary);
+
+    hr = CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Resources\\rusty_metal_04_metal.dds", nullptr, &m_pTextureMetallic);
+    if (FAILED(hr))
+        return hr;
+
+    hr = CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Resources\\rusty_metal_04_rough.dds", nullptr, &m_pTextureRoughness);
+    if (FAILED(hr))
+        return hr;
+
+    hr = CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Resources\\DiffuseCM.dds", nullptr, &m_pTextureDiffuseIBL);
+    if (FAILED(hr))
+        return hr;
+
+    hr = CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Resources\\SpecularCM.dds", nullptr, &m_pTextureSpecularIBL);
     if (FAILED(hr))
         return hr;
 
@@ -102,7 +115,9 @@ void Scene::setupLightProperties()
     light.QuadraticAttenuation = 1;
 
     // set up the light
-    XMFLOAT4 LightPosition(m_pCamera->getPosition().x, m_pCamera->getPosition().y, m_pCamera->getPosition().z, 1);
+
+    //XMFLOAT4 LightPosition(m_pCamera->getPosition().x , m_pCamera->getPosition().y, m_pCamera->getPosition().z, 1);
+    XMFLOAT4 LightPosition(5 , 5, -6, 1);
     light.Position = LightPosition;
     
     m_lightProperties.EyePosition = LightPosition;
@@ -112,9 +127,10 @@ void Scene::setupLightProperties()
 void Scene::update(const float deltaTime)
 {
     m_timeElapsed += deltaTime;
-    ID3D11ShaderResourceView* textures[] = { m_pTextureDiffuse, m_pTextureDiffuseSecondary };
+    ID3D11ShaderResourceView* textures[] = { m_pTextureDiffuse, m_pTextureMetallic, m_pTextureRoughness, m_pTextureDiffuseIBL, m_pTextureSpecularIBL };
     // note the pixel shader and the vertex shader have been set by the renderer class calling this method
-    m_pImmediateContext->PSSetShaderResources(0, 2, textures);
+
+    m_pImmediateContext->PSSetShaderResources(0, 5, textures);
     m_pImmediateContext->PSSetSamplers(0, 1, &m_pSamplerLinear);
   
 
