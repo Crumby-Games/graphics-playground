@@ -74,6 +74,10 @@ HRESULT Scene::init(HWND hwnd, const Microsoft::WRL::ComPtr<ID3D11Device>& devic
     if (FAILED(hr))
         return hr;
 
+    hr = CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Resources\\rusty_metal_04_nor.dds", nullptr, &m_pTextureNormal);
+    if (FAILED(hr))
+        return hr;
+
     hr = CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"Resources\\DiffuseCM.dds", nullptr, &m_pTextureDiffuseIBL);
     if (FAILED(hr))
         return hr;
@@ -127,10 +131,10 @@ void Scene::setupLightProperties()
 void Scene::update(const float deltaTime)
 {
     m_timeElapsed += deltaTime;
-    ID3D11ShaderResourceView* textures[] = { m_pTextureDiffuse, m_pTextureMetallic, m_pTextureRoughness, m_pTextureDiffuseIBL, m_pTextureSpecularIBL };
+    ID3D11ShaderResourceView* textures[] = { m_pTextureDiffuse, m_pTextureMetallic, m_pTextureRoughness, m_pTextureNormal, m_pTextureDiffuseIBL, m_pTextureSpecularIBL };
     // note the pixel shader and the vertex shader have been set by the renderer class calling this method
 
-    m_pImmediateContext->PSSetShaderResources(0, 5, textures);
+    m_pImmediateContext->PSSetShaderResources(0, 6, textures);
     m_pImmediateContext->PSSetSamplers(0, 1, &m_pSamplerLinear);
   
 

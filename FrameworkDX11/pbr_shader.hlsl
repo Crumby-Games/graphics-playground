@@ -18,8 +18,9 @@ cbuffer CustomConstantBuffer : register(b2)
 Texture2D albedoMap : register(t0);
 Texture2D metallicMap : register(t1);
 Texture2D roughnessMap : register(t2);
-TextureCube iblDiffuseMap : register(t3);
-TextureCube iblSpecularMap : register(t4);
+Texture2D normalMap : register(t3);
+TextureCube iblDiffuseMap : register(t4);
+TextureCube iblSpecularMap : register(t5);
 SamplerState samLinear : register(s0);
 
 static const float PI = 3.14159265f;
@@ -74,6 +75,7 @@ struct VS_INPUT
 struct PS_INPUT
 {
     float4 Pos : SV_POSITION;
+    float3x3 TBN : TBN;
 	float4 worldPos : POSITION;
 	float3 Norm : NORMAL;
 	float2 Tex : TEXCOORD0;
@@ -176,9 +178,17 @@ PS_INPUT VS( VS_INPUT input )
     output.Pos = mul( output.Pos, Projection );
 
 	// multiply the normal by the world transform (to go from model space to world space)
-	output.Norm = mul(float4(input.Norm, 0), World).xyz;
+	
 
 	output.Tex = input.Tex;
+    
+    float3 T = mul(float4(input.Tangent.xyz, 0), World).xyz;
+    float3 N = mul(float4(input.Norm, 0), World).xyz;
+    T = normalize(T - dot(T, N) * N);
+    float3 B = cross(N, T);
+    
+    output.Norm = N;
+    output.TBN = float3x3(T, B, N);
     
     return output;
 }
@@ -192,13 +202,20 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
     //float3 albedo = float3(0.3, 0.3, 0.3);
     //float metallic = 0.2;
     //float roughness = 1.0;
+    
     float3 albedo = albedoMap.Sample(samLinear, IN.Tex);
     float metallic = metallicMap.Sample(samLinear, IN.Tex).r;
     float roughness = roughnessMap.Sample(samLinear, IN.Tex).r;
+    float3 normalSample = normalize(normalMap.Sample(samLinear, IN.Tex));
+    
+    
+    
  
 // 2. Get the normal from the normal map 
 
-    float3 N = IN.Norm;
+    // * normalSample In.TBN
+    float3 N = normalize(mul(normalSample, IN.TBN));
+    // float3 N = normalize(normalSample * 2 - 1);
  
 // 3. Calculate vectors 
     float3 V = normalize(EyePosition - IN.worldPos); // View vector 
@@ -282,6 +299,7 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
 
 
     float3 ambient = 0.01 * albedo;
+    return float4(roughness, roughness, roughness, 1.0);
     return float4(finalPoint + finalIBL + ambient, 1.0);
 }
 
