@@ -159,9 +159,9 @@ float2 IntegrateBRDF(float NdotV, float roughness)
     const float4 c0 = float4(-1, -0.0275, -0.572, 0.022);
     const float4 c1 = float4(1, 0.0425, 1.04, -0.04);
     
-    float4 r = roughness * c0 * c1;
+    float4 r = roughness * c0 + c1;
     float a004 = min(r.x * r.x, exp2(-9.28 * NdotV)) * r.x + r.y;
-    return float2(-1.04, 1.04) * a004 * r.zw;
+    return float2(-1.04, 1.04) * a004 + r.zw;
 }
 
 //--------------------------------------------------------------------------------------
@@ -219,15 +219,15 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
 // 5. Specular Component
 // 5.1 NDF
     float rSq = roughness * roughness;
-    float NdotH = dot(N, H);
+    float NdotH = max(dot(N, H), 0.0);
     float D = rSq / (PI * pow(pow(NdotH, 2) * (rSq - 1) + 1, 2));
 
 //// 5.2 GGX
     float k = pow(roughness + 1, 2) / 8;
-    float G = G_sub(L, N, k) * G_sub(V, N, k);
+    float G = G_sub(N, L, k) * G_sub(N, V, k);
 	
 //// 5.3 Specular BRDF
-    float3 specular = (D * G * F) / (4 * dot(N, L) * dot(N, V));
+    float3 specular = (D * G * F) / max(4 * dot(N, L) * dot(N, V), 0.01);
 
 //// 6. Diffuse Component
     float3 dColor = (1 - F) * (1 - metallic);
@@ -271,12 +271,11 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
             float3 diffuseIBL = dColor * albedo * irradiance;
             
             float prefilteredLod = roughness * maxReflectionLod;
-            float3 prefilteredColour = iblSpecularMap.SampleLevel(samLinear, R, prefilteredLod).rgb;
+            float3 prefilteredColour = iblSpecularMap.SampleLevel(samLinear, R, prefilteredLod);
         
             float2 brdf = IntegrateBRDF(dot(N, V), roughness);
             float3 specularIBL = prefilteredColour * (F * brdf.x + brdf.y);
             finalIBL = diffuseIBL + specularIBL;
-        
             
             break;
     }
