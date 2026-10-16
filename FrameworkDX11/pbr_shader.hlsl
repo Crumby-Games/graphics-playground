@@ -248,7 +248,6 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
     {
         case 0:
             const float3 ambientColor = float3(0.1, 0.1, 0.1);
-            finalIBL = ambient * dColor * albedo;
             finalIBL = ambientColor * dColor * albedo;
             break;
         case 1:
