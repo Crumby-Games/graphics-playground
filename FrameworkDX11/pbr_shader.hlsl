@@ -182,13 +182,13 @@ PS_INPUT VS( VS_INPUT input )
 
 	output.Tex = input.Tex;
     
-    float3 T = mul(float4(input.Tangent.xyz, 0), World).xyz;
-    float3 N = mul(float4(input.Norm, 0), World).xyz;
+    float3 T = normalize(mul(float4(input.Tangent.xyz, 0), World).xyz);
+    float3 N = normalize(mul(float4(input.Norm, 0), World).xyz);
     T = normalize(T - dot(T, N) * N);
     float3 B = cross(N, T);
     
     output.Norm = N;
-    output.TBN = float3x3(T, B, N);
+    output.TBN = float3x3(T, B, N); // watch a youtube tutorial.
     
     return output;
 }
@@ -206,7 +206,7 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
     float3 albedo = albedoMap.Sample(samLinear, IN.Tex);
     float metallic = metallicMap.Sample(samLinear, IN.Tex).r;
     float roughness = roughnessMap.Sample(samLinear, IN.Tex).r;
-    float3 normalSample = normalize(normalMap.Sample(samLinear, IN.Tex));
+    float3 normalSample = normalMap.Sample(samLinear, IN.Tex);
     
     
     
@@ -214,8 +214,9 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
 // 2. Get the normal from the normal map 
 
     // * normalSample In.TBN
-    float3 N = normalize(mul(normalSample, IN.TBN));
-    // float3 N = normalize(normalSample * 2 - 1);
+    //float3 N = IN.Norm; 
+    // float3 N = normalize(mul(normalSample, IN.TBN));
+    float3 N = normalize(mul(normalize(normalSample), IN.TBN));
  
 // 3. Calculate vectors 
     float3 V = normalize(EyePosition - IN.worldPos); // View vector 
@@ -299,7 +300,9 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
 
 
     float3 ambient = 0.01 * albedo;
-    return float4(roughness, roughness, roughness, 1.0);
+    //return float4(N / 2 + 0.5, 1.0);
+    return float4(F, 1.0);
+    return float4(F, 1.0);
     return float4(finalPoint + finalIBL + ambient, 1.0);
 }
 
