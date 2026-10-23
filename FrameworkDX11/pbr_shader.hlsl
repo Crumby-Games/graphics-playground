@@ -75,7 +75,7 @@ struct VS_INPUT
 struct PS_INPUT
 {
     float4 Pos : SV_POSITION;
-    float3x3 TBN : TBN;
+    float4 Tangent : TANGENT;
 	float4 worldPos : POSITION;
 	float3 Norm : NORMAL;
 	float2 Tex : TEXCOORD0;
@@ -176,19 +176,12 @@ PS_INPUT VS( VS_INPUT input )
 	output.worldPos = output.Pos;
     output.Pos = mul( output.Pos, View );
     output.Pos = mul( output.Pos, Projection );
-
-	// multiply the normal by the world transform (to go from model space to world space)
-	
-
-	output.Tex = input.Tex;
+    output.Tex = input.Tex;
     
-    float3 T = normalize(mul(float4(input.Tangent.xyz, 0), World).xyz);
-    float3 N = normalize(mul(float4(input.Norm, 0), World).xyz);
-    T = normalize(T - dot(T, N) * N);
-    float3 B = cross(N, T);
-    
-    output.Norm = N;
-    output.TBN = float3x3(T, B, N); // watch a youtube tutorial.
+	// multiply the normal and tangent by the world transform (to go from model space to world space)
+    output.Tangent.xyz = normalize(mul(float4(input.Tangent.xyz, 0), World).xyz);
+    output.Norm = normalize(mul(float4(input.Norm, 0), World).xyz);
+    output.Tangent.w = input.Tangent.w;
     
     return output;
 }
@@ -206,17 +199,17 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
     float3 albedo = albedoMap.Sample(samLinear, IN.Tex);
     float metallic = metallicMap.Sample(samLinear, IN.Tex).r;
     float roughness = roughnessMap.Sample(samLinear, IN.Tex).r;
-    float3 normalSample = normalMap.Sample(samLinear, IN.Tex);
-    
-    
+    float3 normalSample = normalMap.Sample(samLinear, IN.Tex) * 2 - 1;
     
  
 // 2. Get the normal from the normal map 
-
-    // * normalSample In.TBN
-    //float3 N = IN.Norm; 
-    // float3 N = normalize(mul(normalSample, IN.TBN));
-    float3 N = normalize(mul(normalize(normalSample), IN.TBN));
+    float3 T = normalize(IN.Tangent.xyz);
+    T = normalize(T - dot(T, IN.Norm) * IN.Norm);
+    float3 B = cross(IN.Norm, T) * IN.Tangent.w;
+    
+    float3x3 TBN = float3x3(T, B, IN.Norm);
+    
+    float3 N = normalize(mul(normalSample, TBN));
  
 // 3. Calculate vectors 
     float3 V = normalize(EyePosition - IN.worldPos); // View vector 
@@ -228,7 +221,7 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
  
  
 // 4. Calculate Fresnel F0 
-// For dielectrics, F0 is constant. For metals, it's the albedo. 
+// For dielectrics, F0 is constant. For metals, it's the albedo.
     float3 F0 = float3(0.04, 0.04, 0.04);
     F0 = lerp(F0, albedo, metallic);
 	
@@ -253,11 +246,6 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
 
 //// 7. Result
     float3 finalPoint = (diffuse + specular) * NdotL;
-    
-	
-
-// Part B
-
     
     // Part B: Environment
     float3 finalIBL = float3(0, 0, 0);
@@ -298,12 +286,8 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
             break;
     }
 
-
-    float3 ambient = 0.01 * albedo;
-    //return float4(N / 2 + 0.5, 1.0);
-    return float4(F, 1.0);
-    return float4(F, 1.0);
-    return float4(finalPoint + finalIBL + ambient, 1.0);
+    //return float4(G, G, G, 1.0); // (the term giving error)
+    return float4(finalPoint + finalIBL, 1.0);
 }
 
 

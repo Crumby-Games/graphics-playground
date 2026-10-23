@@ -168,6 +168,9 @@
     <ClInclude Include="Skeleton.h">
       <Filter>Animation</Filter>
     </ClInclude>
+    <ClInclude Include="ImguiUtils.h">
+      <Filter>App</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="App">

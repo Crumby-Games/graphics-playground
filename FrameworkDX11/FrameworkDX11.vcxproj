@@ -364,6 +364,7 @@
     <ClInclude Include="DX11App.h" />
     <ClInclude Include="DX11Renderer.h" />
     <ClInclude Include="gltf_utils.hpp" />
+    <ClInclude Include="ImguiUtils.h" />
     <ClInclude Include="irenderingcontext.hpp" />
     <ClInclude Include="iscene.hpp" />
     <ClInclude Include="json.hpp" />

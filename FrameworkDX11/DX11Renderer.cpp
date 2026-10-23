@@ -503,14 +503,18 @@ void DX11Renderer::startIMGUIDraw(const unsigned int FPS)
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
+    ImGui::SetNextWindowSize(ImVec2(500, -1), ImGuiCond_FirstUseEver);
 
     // YOU will want to modify this for your own debug, controls etc - comment it out to hide the window
     //ImGui::ShowMetricsWindow();
-    ImGui::SetWindowFontScale(4.0f);
-    ImGui::Text("FPS %d", FPS);
     ImGui::SetWindowFontScale(1.0f);
+    ImGui::Text("FPS %d", FPS);
+    //ImGui::SetWindowFontScale(1.0f);
     ImGui::Spacing();
+    static float sphereTranslation[3] = {0,0,0};
 
+    m_pScene->m_sceneobjects[0].SetMatrixToRoots(XMMatrixTranslation(sphereTranslation[0], sphereTranslation[1], sphereTranslation[2]));
+    ImGui::DragFloat3("Sphere Position", sphereTranslation,0.2f,-10,10);
     // example usage
     /*if (ImGui::RadioButton("Single threaded CPU", g_ttype == use_cpu_singlethread)) g_ttype = use_cpu_singlethread;
     if (ImGui::RadioButton("Multi threaded CPU", g_ttype == use_cpu_multithread)) g_ttype = use_cpu_multithread;
