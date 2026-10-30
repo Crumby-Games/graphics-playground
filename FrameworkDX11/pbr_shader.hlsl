@@ -152,7 +152,7 @@ LightingResult ComputeLighting(float4 pixelToLightVectorNormalised, float4 pixel
 
 float G_sub(float3 N, float3 V, float k)
 {
-    float3 NdotV = dot(N, V);
+    float3 NdotV = saturate(dot(N, V));
     return NdotV / (NdotV * (1 - k) + k);
 }
 
@@ -216,8 +216,8 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
     float3 L = normalize(Lights[0].Position - IN.worldPos); // Light vector 
     float3 H = normalize(V + L); // Halfway vector 
     float3 R = reflect(-V, N);
-    float cosTheta = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
+    float cosTheta = saturate(dot(N, V));
+    float NdotL = saturate(dot(N, L));
  
  
 // 4. Calculate Fresnel F0 
@@ -230,7 +230,7 @@ float4 PS_PBR(PS_INPUT IN) : SV_TARGET
 // 5. Specular Component
 // 5.1 NDF
     float rSq = roughness * roughness;
-    float NdotH = max(dot(N, H), 0.0);
+    float NdotH = saturate(dot(N, H));
     float D = rSq / (PI * pow(pow(NdotH, 2) * (rSq - 1) + 1, 2));
 
 //// 5.2 GGX
